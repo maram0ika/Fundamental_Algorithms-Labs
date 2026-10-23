@@ -26,13 +26,24 @@ typedef enum GetReverseStringStatus {
     GET_REVERSE_STRING_MEMORY_ERROR
 } GetReverseStringStatus;
 
-//typedef enum GetArrOfStringStatus {
-//} GetArrOfStringStatus;
+typedef enum ChangeCaseOddStatus  {
+    CHANGE_CASE_ODD_OK,
+    CHANGE_CASE_ODD_NULL,
+    CHANGE_CASE_ODD_MEMORY_ERROR
+} ChangeCaseOddStatus;
+
+typedef enum ChangeOrderCharStatus {
+    CHANGE_ORDER_CHAR_OK,
+    CHANGE_ORDER_CHAR_NULL,
+    CHANGE_ORDER_CHAR_MEMORY_ERROR
+} ChangeOrderCharStatus;
 
 ParseUnsignedIntStatus parse_unsigned_int(const char *num, unsigned int *result); 
 CheckFlagStatus check_flag(const char flag[]);
 CheckLenStatus len_of_string(const char str[], int *len_string);
 GetReverseStringStatus get_reverse_string(const char str[], char **result);
+ChangeCaseOddStatus change_case_odd (const char str[], char **result);
+ChangeOrderCharStatus change_order_char(const char str[], char **result);
 
 int main(int argc, char *argv[]) {
 
@@ -58,7 +69,7 @@ int main(int argc, char *argv[]) {
         CheckLenStatus status_check_len = len_of_string(argv[2], &len_of_main_string);
         switch (status_check_len){
             case  WHAT_THE_HECK_MAN:
-                printf("REFUSED - Error while retrieving the length\n");
+                printf("REFUSED - Func len_of_string - Error while retrieving the length\n");
                 return 1;
             case  KEEP_IT_UP_BRO:
                 printf("Length - %d\n", len_of_main_string);
@@ -67,17 +78,65 @@ int main(int argc, char *argv[]) {
     }
 
     if (argv[1][1] == 'r') {
-        char *reverse_string;
+        char *reverse_string = NULL;
         GetReverseStringStatus reverse_string_status = get_reverse_string(argv[2], &reverse_string);
         switch (reverse_string_status) {
             case GET_REVERSE_STRING_OK:
                 printf("Reverse string - %s\n", reverse_string);
+                free(reverse_string);
                 return 0;
-            case
+            case GET_REVERSE_STRING_NULL:
+                printf("REFUSED - Func reverse_string_status  - NULL received\n");
+                free(reverse_string);
+                return 1;
+            case GET_REVERSE_STRING_MEMORY_ERROR:
+                printf("REFUSED - Func reverse_string_status  - Memory problem\n");
+                free(reverse_string);
+                return 1;
         }
     }
 
-    // printf("Flag - %s\nString - %s\n", argv[1], argv[2]);
+    if (argv[1][1] == 'u') {
+        char *changed_case_odd_string = NULL;
+        ChangeCaseOddStatus changed_case_odd_string_status  =  change_case_odd(argv[2], &changed_case_odd_string);
+        switch (changed_case_odd_string_status) {
+            case CHANGE_CASE_ODD_NULL:
+                printf("REFUSED - Func сhange_case_odd  - NULL received\n");
+                free(changed_case_odd_string);
+                return 1;
+            
+            case CHANGE_CASE_ODD_MEMORY_ERROR:
+                printf("REFUSED - Func сhange_case_odd  - Memory problem\n");
+                free(changed_case_odd_string);
+                return 1;
+            case  CHANGE_CASE_ODD_OK:
+                printf("A string with the case changed at every odd position - %s\n", changed_case_odd_string);
+                free(changed_case_odd_string);
+                return 0;
+        }
+
+    }
+
+    if (argv[1][1] == 'n') {
+        char *change_order_string = NULL;
+        ChangeOrderCharStatus changed_order_string_status  =  change_order_char(argv[2], &change_order_string);
+        switch (changed_order_string_status) {
+            case CHANGE_ORDER_CHAR_NULL:
+                printf("REFUSED - Func change_case_odd  - NULL received\n");
+                free(change_order_string);
+                return 1;
+            case CHANGE_ORDER_CHAR_MEMORY_ERROR:
+                printf("REFUSED - Func change_case_odd  - Memory problem\n");
+                free(change_order_string);
+                return 1;
+            case CHANGE_ORDER_CHAR_OK:
+                printf("The positions of the characters have been successfully swapped - %s\n",change_order_string);
+                free(change_order_string);
+                return 0;
+        }
+
+    }
+
 
 
     return 0;
@@ -99,7 +158,6 @@ ParseUnsignedIntStatus parse_unsigned_int(const char *num, unsigned int *result)
     return PARSE_UNSIGNED_INT_OK;
 }
 
-//GetArrOfStringStatus get_string(const char *str, ) {
 
 CheckFlagStatus check_flag(const char flag[]) {
     if (flag == NULL) {
@@ -133,12 +191,14 @@ CheckLenStatus len_of_string(const char str[], int *len_string) {
 }
 
 GetReverseStringStatus get_reverse_string(const char str[], char **result) {
-    if (str == NULL || *result == NULL) {
+    if (str == NULL || result == NULL) {
         return GET_REVERSE_STRING_NULL;
     }
 
     int len;
     CheckLenStatus status_len = len_of_string(str, &len);
+    if (status_len == WHAT_THE_HECK_MAN) return GET_REVERSE_STRING_NULL;
+
     char *result1 = NULL;
     result1 = malloc((len + 1) * sizeof(*result1));
     if (result1 == NULL) {
@@ -151,4 +211,72 @@ GetReverseStringStatus get_reverse_string(const char str[], char **result) {
     result1[len] = '\0';
     *result = result1;
     return GET_REVERSE_STRING_OK;
+}
+
+ChangeCaseOddStatus change_case_odd (const char str[], char **result) {
+    if (str == NULL || result == NULL) {
+        return CHANGE_CASE_ODD_NULL;
+    }
+    int len;
+    CheckLenStatus status_len = len_of_string(str, &len);
+    if (status_len == WHAT_THE_HECK_MAN) return CHANGE_CASE_ODD_NULL;
+
+    char *result1 = NULL;
+    result1 = malloc((len + 1) * sizeof(*result1));
+    if (result1 == NULL) {
+        free(result1);
+        return CHANGE_CASE_ODD_MEMORY_ERROR;
+    }
+    for (int i = 0; i < len; i ++) {
+        if (i % 2 == 0) {
+            result1[i] = str[i];
+        } else if (96 < str[i] && str[i] < 123) {
+            result1[i] = str[i] - 32;
+        } else result1[i] = str[i];
+    }
+    result1[len] = '\0';
+    *result = result1;
+    return CHANGE_CASE_ODD_OK;
+}
+
+ChangeOrderCharStatus change_order_char (const char str[], char **result) {
+     if (str == NULL || result == NULL) {
+        return CHANGE_ORDER_CHAR_NULL;
+    }
+    int len;
+
+    CheckLenStatus status_len = len_of_string(str, &len);
+    if (status_len == WHAT_THE_HECK_MAN) return CHANGE_ORDER_CHAR_NULL;
+
+    char *result1 = NULL;
+    result1 = malloc((len + 1) * sizeof(*result1));
+    if (result1 == NULL) {
+        free(result1);
+        return CHANGE_ORDER_CHAR_MEMORY_ERROR;
+    }
+
+    int flag = 0;
+
+    for (int i = 0; i < len; i ++) {
+        if (str[i] > 47 && str[i] < 58) {
+            result1[flag] = str[i];
+            flag ++;
+        }
+    }
+    for (int i = 0; i < len; i ++) {
+        if ((str[i] > 64 && str[i] < 91) || (str[i] > 96 && str[i] < 123)) {
+            result1[flag] = str[i];
+            flag ++;
+        }
+    }
+    for (int i = 0; i < len; i ++) {
+        if (!(str[i] > 47 && str[i] < 58) && 
+        !((str[i] > 64 && str[i] < 91) || (str[i] > 96 && str[i] < 123))) {
+            result1[flag] = str[i];
+            flag ++;
+        }
+    }
+    result1[len] = '\0';
+    *result = result1;
+    return CHANGE_ORDER_CHAR_OK;
 }

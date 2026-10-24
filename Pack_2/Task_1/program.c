@@ -38,16 +38,23 @@ typedef enum ChangeOrderCharStatus {
     CHANGE_ORDER_CHAR_MEMORY_ERROR
 } ChangeOrderCharStatus;
 
+typedef enum ConcatenationStringStatus  {
+    CONCATENATION_STRING_OK,
+    CONCATENATION_STRING_NULL,
+    CONCATENATION_STRING_MEMORY_ERROR
+} ConcatenationStringStatus;
+
 ParseUnsignedIntStatus parse_unsigned_int(const char *num, unsigned int *result); 
 CheckFlagStatus check_flag(const char flag[]);
 CheckLenStatus len_of_string(const char str[], int *len_string);
 GetReverseStringStatus get_reverse_string(const char str[], char **result);
 ChangeCaseOddStatus change_case_odd (const char str[], char **result);
 ChangeOrderCharStatus change_order_char(const char str[], char **result);
+ConcatenationStringStatus concatenation_string (const int argc, const unsigned int int_for_flag_c, char * const argv[], char **result);
 
 int main(int argc, char *argv[]) {
 
-    if (argc != 3) {
+    if (argc < 2 ) {
         printf("REFUSED - Invalid count of arguments!\n");
         return 1;
     }
@@ -62,6 +69,11 @@ int main(int argc, char *argv[]) {
         case CHECK_FLAG_INVALID_VALUE:
             printf("REFUSED - Invalid value of flag\n");
             return 1;
+    }
+
+    if (argv[1][1] != 'c' && argc != 3 ) {
+        printf("REFUSED - Invalid count of arguments!\n");
+        return 1;
     }
 
     if (argv[1][1] == 'l') {
@@ -137,9 +149,46 @@ int main(int argc, char *argv[]) {
 
     }
 
+    if (argc < 4 ) {
+        printf("REFUSED - Invalid count of arguments!\n");
+        return 1;
+    } 
 
+    if (argv[1][1] == 'c') {
+        unsigned int int_for_flag_c;
+        ParseUnsignedIntStatus int_status = parse_unsigned_int(argv[3], &int_for_flag_c);
+        switch (int_status) {
+            case PARSE_UNSIGNED_INT_OK:
+                break;
+            case PARSE_UNSIGNED_INT_NULL:
+                printf("REFUSED - Func parse_unsigned_int  - NULL received\n");
+                return 1;
+            case PARSE_UNSIGNED_INT_INVALID_VALUE:
+                printf("REFUSED - Func parse_unsigned_int  - invalid value of num\n");
+                return 1;
+            case PARSE_UNSIGNED_INT_OUT_OF_RANGE:
+                printf("REFUSED - Func parse_unsigned_int  - num is out of range\n");
+                return 1;
+        }
 
-    return 0;
+        char *new_concatenated_string = NULL;
+        ConcatenationStringStatus new_concatenated_string_status  = concatenation_string(argc, int_for_flag_c, argv, &new_concatenated_string);
+        switch (new_concatenated_string_status) {
+            case CONCATENATION_STRING_NULL:
+                printf("REFUSED - Func concatenation_string  - NULL received\n");
+                free(new_concatenated_string);
+                return 1;
+            case CONCATENATION_STRING_MEMORY_ERROR:
+                printf("REFUSED - Func concatenation_string  - Memory problem\n");
+                free(new_concatenated_string);
+                return 1;
+            case CONCATENATION_STRING_OK:
+                printf("Man, I hate this job - %s\n",new_concatenated_string);
+                free(new_concatenated_string);
+                return 0;
+        }
+
+    }
 }
 
 ParseUnsignedIntStatus parse_unsigned_int(const char *num, unsigned int *result) {
@@ -279,4 +328,70 @@ ChangeOrderCharStatus change_order_char (const char str[], char **result) {
     result1[len] = '\0';
     *result = result1;
     return CHANGE_ORDER_CHAR_OK;
+}
+
+ConcatenationStringStatus concatenation_string (const int argc, const unsigned int int_for_flag_c, char * const argv[], char **result) {
+
+    if (argv == NULL ||result == NULL ) {
+        return CONCATENATION_STRING_NULL;
+    }
+    int size_arr_index_string = 1;
+        int *arr_of_index_string = malloc(size_arr_index_string * sizeof(*arr_of_index_string));
+        if (arr_of_index_string == NULL) {
+            free(arr_of_index_string);
+            return CONCATENATION_STRING_MEMORY_ERROR;
+        } 
+
+        arr_of_index_string[0] = 2;
+
+        for (int i = 5; i <= argc; i++) {
+            int *temp = realloc(arr_of_index_string, (size_arr_index_string + 1) * sizeof(*temp));
+            if (temp == NULL) {
+                free(arr_of_index_string);
+                 return CONCATENATION_STRING_MEMORY_ERROR;
+            }
+            arr_of_index_string = temp;
+            arr_of_index_string[size_arr_index_string] = i - 1;
+            size_arr_index_string ++;
+        }
+
+        srand(int_for_flag_c);
+
+        for (int i = size_arr_index_string - 1; i > 0; i--) {
+            int value = rand() % (i + 1);
+
+            int temp = arr_of_index_string[i];
+            arr_of_index_string[i] = arr_of_index_string[value];
+            arr_of_index_string[value] = temp;
+        }
+
+        char *result1 = NULL;
+        int size_result1 = 0;
+        for (int i = 0; i < size_arr_index_string; i ++) {
+            for (int k = 0;argv[arr_of_index_string[i]][k] != '\0'; k ++) {
+                char *temp1 = realloc(result1, (size_result1 + 1) * sizeof(*temp1));
+                if (temp1 == NULL) {
+                    free(arr_of_index_string);
+                    free(result1);
+                    return CONCATENATION_STRING_MEMORY_ERROR;
+                }
+                result1 = temp1;
+                result1[size_result1] = argv[arr_of_index_string[i]][k];
+                size_result1 ++;
+            }
+        }
+        char *temp1 = realloc(result1, (size_result1 + 1) * sizeof(*temp1));
+        if (temp1 == NULL) {
+            free(arr_of_index_string);
+            free(result1);
+            return CONCATENATION_STRING_MEMORY_ERROR;
+        }
+        result1 = temp1;
+        result1[size_result1] = '\0';
+        size_result1 ++;
+        *result = result1;
+
+        free(arr_of_index_string);
+        return CONCATENATION_STRING_OK;
+    
 }

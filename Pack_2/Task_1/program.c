@@ -336,8 +336,8 @@ ConcatenationStringStatus concatenation_string (const int argc, const unsigned i
         return CONCATENATION_STRING_NULL;
     }
     int size_arr_index_string = 1;
-        int *arr_of_index_string = malloc(size_arr_index_string * sizeof(*arr_of_index_string));
-        if (arr_of_index_string == NULL) {
+    int *arr_of_index_string = malloc(size_arr_index_string * sizeof(*arr_of_index_string));
+    if (arr_of_index_string == NULL) {
             free(arr_of_index_string);
             return CONCATENATION_STRING_MEMORY_ERROR;
         } 

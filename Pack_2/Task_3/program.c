@@ -116,8 +116,8 @@ ParseUnsignedIntStatus parse_unsigned_int(const char *num, unsigned int *result)
     return PARSE_UNSIGNED_INT_OK;
 }
 
-//блят уже когда дописала поняла что сложность 2n если не больше тк 2 раза проходимся.
-// но так как будто более читабельно и проще учесть все подстроки когда одна подстрока заходит на другую
+//блят уже когда дописала поняла что  2 раза проходимся.
+// но так как будто более читабельно и проще учесть все подстроки когда одна подстрока заходит на другую и все равно сложность n
 MagnumOpusStatus magnum_opus(const char *substring, const int count, OTVET **result, size_t *result_size, ...) {
 
     if (substring == NULL || result == NULL || result_size == NULL) {

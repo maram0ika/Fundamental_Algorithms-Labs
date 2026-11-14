@@ -1,0 +1,8 @@
+a=20;
+b=6;
+sum=a+b;
+sub=a-b;
+mult=a*b;
+div=a/b;
+mod=a%b;
+print;

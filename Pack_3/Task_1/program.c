@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
-#include <string.h>
 
 
 
@@ -56,7 +55,7 @@ int main(int argc, char *argv[]) {
             return 1;
 
         case GUSLIK_YESYESYES:
-            printf("10 -> %d\n", 2^r);
+            printf("10 -> %d\n", 1 << r);
             printf("%d -> %s", num, result);
     }
     
@@ -91,87 +90,57 @@ ParseIntStatus parse_int(const char *string_num, int *result) {
 
 GuslikStatus guslik(int guslik_num, const int guslik_r, char *guslik_result) {
 
-    if (guslik_result = NULL) {
+    if (guslik_result == NULL) {
         return GUSLIK_NONONO;
     }
 
-    int guslik_mask;
-    char buffer_guslik_result[34];
-    int count = 1;
-    int guslik_num_buffer = abs(guslik_num);
-
-    switch(guslik_r) {
-
-        //кароче если что я хотела тут чвести все к 2 случаем : r=1,2,3 и r=4,5 чтоб не дублировать код
-        //но тогда было б guslik_mask = 2^guslik_r - 1 а у меня и так как будто тут хвататет арифм операций =/
-
-        case 1:
-
-            guslik_mask = 1;
-
-            while (guslik_num_buffer != 0) {
-                buffer_guslik_result[count] = (char)((guslik_mask & guslik_num_buffer) + '0');
-                guslik_num_buffer >> 1;
-                count++;
-            }
-
-        case 2:
-
-            guslik_mask = 3;
-
-            while (guslik_num_buffer != 0) {
-                buffer_guslik_result[count] = (char)((guslik_mask & guslik_num_buffer) + '0');
-                guslik_num_buffer >> 2;
-                count++;
-            }
-        
-        case 3:
-
-            guslik_mask = 7;
-
-            while (guslik_num_buffer != 0) {
-                buffer_guslik_result[count] = (char)((guslik_mask & guslik_num_buffer) + '0');
-                guslik_num_buffer >> 3;
-                count++;
-            }
-        
-        case 4:
-
-            guslik_mask = 15;
-
-            while (guslik_num_buffer != 0) {
-                if ((guslik_mask & guslik_num_buffer) < 10) {
-                buffer_guslik_result[count] = (char)((guslik_mask & guslik_num_buffer) + '0');
-                } else {
-                    buffer_guslik_result[count] = (char)(((guslik_mask & guslik_num_buffer) - 10) + 'A');
-                }
-                guslik_num_buffer >> 4;
-                count++;
-            }
-
-        case 5:
-
-            guslik_mask = 31;
-
-            while (guslik_num_buffer != 0) {
-                if ((guslik_mask & guslik_num_buffer) < 10) {
-                buffer_guslik_result[count] = (char)((guslik_mask & guslik_num_buffer) + '0');
-                } else {
-                    buffer_guslik_result[count] = (char)(((guslik_mask & guslik_num_buffer) - 10) + 'A');
-                }
-                guslik_num_buffer >> 5;
-                count++;
-            }
+    if (guslik_num == 0) {
+        guslik_result[0] = '0';
+        guslik_result[1] = '\0';
+        return  GUSLIK_YESYESYES;
     }
 
-    buffer_guslik_result[count] = '\0';
+    unsigned int guslik_mask = ~(~0u << guslik_r);
+    char buffer_guslik_result[34];
+    int count = 0;
+
+    //получаем модуль числа без abc
+    unsigned int guslik_num_buffer;
+
+    if (guslik_num >= 0) {
+        guslik_num_buffer = (unsigned int)guslik_num;
+    } else {
+        guslik_num_buffer = (unsigned int)guslik_num;
+        guslik_num_buffer = ~guslik_num_buffer;
+
+        unsigned int carry = 1u;
+
+        while (carry != 0u) {
+            unsigned int new_carry = guslik_num_buffer & carry;
+            guslik_num_buffer ^= carry;
+            carry = new_carry << 1;
+        }
+    }
+
+    const char digits[] = "0123456789ABCDEFGHIJKLMNOPQRSTUV";
+
+    while (guslik_num_buffer != 0) {
+                buffer_guslik_result[count] = (digits[(guslik_mask & guslik_num_buffer)]);
+                guslik_num_buffer >>= guslik_r; //как +=
+                count++;
+    }
 
     if (guslik_num < 0) {
-        guslik_result = buffer_guslik_result;
-        return GUSLIK_YESYESYES;
+        guslik_result[0] = '-';
+        for (int i = 1; i <= count ; i ++) {
+             guslik_result[i] = buffer_guslik_result[count - i];
+        }
+        guslik_result[count + 1] = '\0';
+    } else{
+     for (int i = 0; i < count; i ++) {
+             guslik_result[i] = buffer_guslik_result[count - i - 1];
+        }
+     guslik_result[count] = '\0';
     }
-
-     memcpy(guslik_result, buffer_guslik_result + 1, count);
-     return GUSLIK_YESYESYES;
-
+    return GUSLIK_YESYESYES;
 }

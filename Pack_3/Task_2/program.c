@@ -2,6 +2,7 @@
 #include <limits.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdlib.h>
 
 
 typedef struct Application {
@@ -35,11 +36,21 @@ typedef enum GetTimeStatus {
     GET_TIME_STATUS_OK,
 } GetTimeStatus;
 
+typedef enum GreedFuncStatus {
+    GREED_FUNC_STATUS_NULL,
+    GREED_FUNC_STATUS_ERROR,
+    GREED_FUNC_STATUS_OK,
+} GreedFuncStatus;
+
 
 ParseUnsignedIntStatus parse_unsigned_int(const char *num, unsigned int *result);
 CheckLenStringStatus check_len_string(char *strochka, size_t strochka_len, const unsigned int min_value, const unsigned int max_value);
 ParseApplicationStatus parse_application(char *application_string, Application *application_result);
 GetTimeStatus get_time(char *time_string, unsigned int *time_result);
+GreedFuncStatus greed_func(const Application *arr, const unsigned int n, const unsigned int k, unsigned int *result);
+
+int comporator_application_ascending(const void *x1, const void *x2);
+int comporator_free_time_hall_descending(const void *x1, const void *x2);
 
 int main(void) {
 
@@ -97,16 +108,34 @@ int main(void) {
     for (int i = 0; i < n; i ++) {
             //инт + 1 + 5 + 1 + 5 + \n + \0
             char buffer2[24];
+            if (fgets(buffer2, sizeof(buffer2), stdin) == NULL) {
+                free(application_arr);
+                printf("Refused - input error\n");
+                return 1;
+            }
+
             ParseApplicationStatus buffer2_status = parse_application(buffer2, &application_arr[i]);
             if (buffer2_status != PARSE_APPLICATION_STATUS_OKS) {
                 printf("Refused - Parsed application error\n");
+                free(application_arr);
                 return 1;
             }
     }
 
+    qsort(application_arr, n, sizeof(*application_arr),  comporator_application_ascending);
 
+    unsigned int mega_result;
+    GreedFuncStatus mega_result_status = greed_func(application_arr, n, k, &mega_result);
 
+    if (mega_result_status != GREED_FUNC_STATUS_OK) {
+        free(application_arr);
+        printf("Refused - error GREED_FUNC_STATUS\n");
+        return 1;
+    }
 
+    printf("OTVET OMG o==3 %u\n", mega_result);
+
+    free(application_arr);
     return 0;
 }
 
@@ -227,4 +256,65 @@ GetTimeStatus get_time(char *time_string, unsigned int *time_result) {
     return GET_TIME_STATUS_OK;
 }
 
-//проверка длины строк - дальше уже парсировка и к жадным пупупу
+int comporator_application_ascending(const void *x1, const void *x2) {
+
+    const Application *a = x1;
+    const Application *b = x2;
+
+    if (a->finish_time > b->finish_time) {
+        return 1;
+    } else if (a->finish_time < b->finish_time) {
+        return -1;
+    }
+
+    return 0;
+}
+
+GreedFuncStatus greed_func(const Application *arr, const unsigned int n, const unsigned int k, unsigned int *result) {
+    if (arr == NULL || result == NULL) {
+        return GREED_FUNC_STATUS_NULL;
+    }
+
+    unsigned int result_buffer = 0;
+
+    if (n == 0 || k == 0) {
+        *result = result_buffer;
+        return GREED_FUNC_STATUS_OK;
+    }
+
+    unsigned int *hall_free_time = calloc(k, sizeof(*hall_free_time));
+    if (hall_free_time == NULL) {
+        return GREED_FUNC_STATUS_ERROR;
+    }
+
+    for (int i = 0; i < n; i ++) {
+        for (int j = 0; j < k; j ++) {
+            if (arr[i].start_time >= hall_free_time[j]) {
+                hall_free_time[j] = arr[i].finish_time;
+                result_buffer ++;
+                break;
+            }
+        }
+        qsort(hall_free_time, k, sizeof(unsigned int), comporator_free_time_hall_descending);
+    }
+
+    free(hall_free_time);
+
+    *result = result_buffer;
+    return GREED_FUNC_STATUS_OK;
+
+}
+
+int comporator_free_time_hall_descending(const void *x1, const void *x2) {
+
+    const unsigned int *a = x1;
+    const unsigned int *b = x2;
+
+    if (*a > *b) {
+        return -1;
+    } else if (*a < *b) {
+        return 1;
+    }
+
+    return 0;
+}
